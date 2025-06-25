@@ -2,12 +2,16 @@
 import { useMedications } from '@/hooks/useMedications';
 import { MedicationCard } from '@/components/MedicationCard';
 import { AddMedicationForm } from '@/components/AddMedicationForm';
+import { NotificationSettings } from '@/components/NotificationSettings';
 import { useToast } from '@/hooks/use-toast';
-import { Pill, Calendar } from 'lucide-react';
+import { Pill, Calendar, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const { medications, addMedication, deleteMedication, takeMedication, getTodaysTakes } = useMedications();
   const { toast } = useToast();
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleAddMedication = (medicationData: Parameters<typeof addMedication>[0]) => {
     addMedication(medicationData);
@@ -49,12 +53,27 @@ const Index = () => {
           <div className="flex items-center justify-center gap-3">
             <Pill className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-900">Моите лекарства</h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettings(!showSettings)}
+              className="ml-4"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
           <div className="flex items-center justify-center gap-2 text-gray-600">
             <Calendar className="h-4 w-4" />
             <p className="text-sm capitalize">{today}</p>
           </div>
         </div>
+
+        {/* Settings panel */}
+        {showSettings && (
+          <div className="max-w-2xl mx-auto">
+            <NotificationSettings />
+          </div>
+        )}
 
         {/* Add medication form */}
         <div className="max-w-2xl mx-auto">
