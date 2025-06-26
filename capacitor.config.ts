@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.80e6972d9a444fcab125afdf78fe8534',
+  appId: 'com.lovable.bulgarianvoicebeacon',
   appName: 'bulgarian-voice-beacon',
   webDir: 'dist',
   server: {
