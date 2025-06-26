@@ -1,17 +1,25 @@
 
 import { useMedications } from '@/hooks/useMedications';
 import { MedicationCard } from '@/components/MedicationCard';
-import { AddMedicationForm } from '@/components/AddMedicationForm';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { MedicationReport } from '@/components/MedicationReport';
+import { MobileHeader } from '@/components/MobileHeader';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { MobileDrawer } from '@/components/MobileDrawer';
+import { MobileAddMedicationSheet } from '@/components/MobileAddMedicationSheet';
+import { MobileStatsCard } from '@/components/MobileStatsCard';
 import { useToast } from '@/hooks/use-toast';
-import { Pill, Calendar, Settings, FileText } from 'lucide-react';
+import { Pill } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const Index = () => {
   const { medications, takes, addMedication, deleteMedication, takeMedication, getTodaysTakes } = useMedications();
   const { toast } = useToast();
+  
+  const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'profile'>('home');
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [showAddSheet, setShowAddSheet] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
@@ -40,121 +48,119 @@ const Index = () => {
     });
   };
 
-  const today = new Date().toLocaleDateString('bg-BG', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // Calculate stats
+  const completed = medications.filter(med => getTodaysTakes(med.id).length >= med.times.length).length;
+  const partial = medications.filter(med => getTodaysTakes(med.id).length > 0 && getTodaysTakes(med.id).length < med.times.length).length;
+  const missed = medications.filter(med => getTodaysTakes(med.id).length === 0).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-3">
-            <Pill className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Моите лекарства</h1>
-            <div className="flex gap-2 ml-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettings(!showSettings)}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowReport(!showReport)}
-              >
-                <FileText className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-2 text-gray-600">
-            <Calendar className="h-4 w-4" />
-            <p className="text-sm capitalize">{today}</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Mobile Header */}
+      <MobileHeader
+        onSettingsClick={() => setShowSettings(true)}
+        onReportClick={() => setShowReport(true)}
+        onMenuClick={() => setShowDrawer(true)}
+      />
 
-        {/* Settings panel */}
-        {showSettings && (
-          <div className="max-w-2xl mx-auto">
-            <NotificationSettings />
+      {/* Main Content */}
+      <div className="flex-1 pb-20 overflow-y-auto">
+        {activeTab === 'home' && (
+          <>
+            {/* Stats Card */}
+            {medications.length > 0 && (
+              <MobileStatsCard
+                completed={completed}
+                partial={partial}
+                missed={missed}
+                total={medications.length}
+              />
+            )}
+
+            {/* Medications List */}
+            <div className="px-4">
+              {medications.length === 0 ? (
+                <div className="text-center py-12">
+                  <Pill className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Няма добавени лекарства
+                  </h3>
+                  <p className="text-gray-600 text-sm px-8">
+                    Започнете като добавите първото си лекарство чрез бутона "+" отдолу.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {medications.map((medication) => (
+                    <MedicationCard
+                      key={medication.id}
+                      medication={medication}
+                      todaysTakes={getTodaysTakes(medication.id).length}
+                      onTake={() => handleTakeMedication(medication.id, medication.name)}
+                      onDelete={() => handleDeleteMedication(medication.id, medication.name)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeTab === 'calendar' && (
+          <div className="p-4 text-center">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Календар</h2>
+            <p className="text-gray-600">Календарният изглед ще бъде добавен скоро</p>
           </div>
         )}
 
-        {/* Report panel */}
-        {showReport && (
-          <div className="max-w-2xl mx-auto">
-            <MedicationReport medications={medications} takes={takes} />
-          </div>
-        )}
-
-        {/* Add medication form */}
-        <div className="max-w-2xl mx-auto">
-          <AddMedicationForm onAdd={handleAddMedication} />
-        </div>
-
-        {/* Medications list */}
-        <div className="space-y-4">
-          {medications.length === 0 ? (
-            <div className="text-center py-12">
-              <Pill className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Няма добавени лекарства
-              </h3>
-              <p className="text-gray-600">
-                Започнете като добавите първото си лекарство или хранителна добавка.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {medications.map((medication) => (
-                <MedicationCard
-                  key={medication.id}
-                  medication={medication}
-                  todaysTakes={getTodaysTakes(medication.id).length}
-                  onTake={() => handleTakeMedication(medication.id, medication.name)}
-                  onDelete={() => handleDeleteMedication(medication.id, medication.name)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Quick stats */}
-        {medications.length > 0 && (
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Статистика за днес</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{medications.length}</div>
-                <div className="text-sm text-gray-600">Общо лекарства</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {medications.filter(med => getTodaysTakes(med.id).length >= med.times.length).length}
-                </div>
-                <div className="text-sm text-gray-600">Завършени</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {medications.filter(med => getTodaysTakes(med.id).length > 0 && getTodaysTakes(med.id).length < med.times.length).length}
-                </div>
-                <div className="text-sm text-gray-600">Частично</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {medications.filter(med => getTodaysTakes(med.id).length === 0).length}
-                </div>
-                <div className="text-sm text-gray-600">Невзети</div>
-              </div>
-            </div>
+        {activeTab === 'profile' && (
+          <div className="p-4 text-center">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Профил</h2>
+            <p className="text-gray-600">Профилните настройки ще бъдат добавени скоро</p>
           </div>
         )}
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav
+        onAddClick={() => setShowAddSheet(true)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      {/* Mobile Drawer */}
+      <MobileDrawer
+        isOpen={showDrawer}
+        onClose={() => setShowDrawer(false)}
+        onSettingsClick={() => setShowSettings(true)}
+        onReportClick={() => setShowReport(true)}
+      />
+
+      {/* Add Medication Sheet */}
+      <MobileAddMedicationSheet
+        isOpen={showAddSheet}
+        onClose={() => setShowAddSheet(false)}
+        onAdd={handleAddMedication}
+      />
+
+      {/* Settings Sheet */}
+      <Sheet open={showSettings} onOpenChange={setShowSettings}>
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle>Настройки</SheetTitle>
+          </SheetHeader>
+          <NotificationSettings />
+        </SheetContent>
+      </Sheet>
+
+      {/* Report Sheet */}
+      <Sheet open={showReport} onOpenChange={setShowReport}>
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle>Медицински отчет</SheetTitle>
+          </SheetHeader>
+          <MedicationReport medications={medications} takes={takes} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
