@@ -16,6 +16,8 @@ interface AddMedicationFormProps {
     frequency: 'daily' | 'twice' | 'three' | 'four';
     times: string[];
     notes?: string;
+    duration?: string;
+    mealTiming?: 'before' | 'during' | 'after';
   }) => void;
 }
 
@@ -26,12 +28,20 @@ const frequencyOptions = [
   { value: 'four', label: 'Четири пъти дневно', count: 4 },
 ];
 
+const mealTimingOptions = [
+  { value: 'before', label: 'Преди хранене' },
+  { value: 'during', label: 'По време на хранене' },
+  { value: 'after', label: 'След хранене' },
+];
+
 export const AddMedicationForm = ({ onAdd }: AddMedicationFormProps) => {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
   const [frequency, setFrequency] = useState<'daily' | 'twice' | 'three' | 'four'>('daily');
   const [times, setTimes] = useState<string[]>(['08:00']);
   const [notes, setNotes] = useState('');
+  const [duration, setDuration] = useState('');
+  const [mealTiming, setMealTiming] = useState<'before' | 'during' | 'after' | ''>('');
   const [isOpen, setIsOpen] = useState(false);
 
   const updateTimesForFrequency = (newFrequency: 'daily' | 'twice' | 'three' | 'four') => {
@@ -70,6 +80,8 @@ export const AddMedicationForm = ({ onAdd }: AddMedicationFormProps) => {
       frequency,
       times: times.filter(time => time.trim()),
       notes: notes.trim() || undefined,
+      duration: duration.trim() || undefined,
+      mealTiming: mealTiming || undefined,
     });
 
     // Изчистване на формата
@@ -78,6 +90,8 @@ export const AddMedicationForm = ({ onAdd }: AddMedicationFormProps) => {
     setFrequency('daily');
     setTimes(['08:00']);
     setNotes('');
+    setDuration('');
+    setMealTiming('');
     setIsOpen(false);
   };
 
@@ -161,6 +175,32 @@ export const AddMedicationForm = ({ onAdd }: AddMedicationFormProps) => {
                 />
               ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="duration">Продължителност на приема (по избор)</Label>
+            <Input
+              id="duration"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              placeholder="Напр. 7 дни, 2 седмици, 1 месец"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Спрямо хранене (по избор)</Label>
+            <Select value={mealTiming} onValueChange={(value) => setMealTiming(value as 'before' | 'during' | 'after')}>
+              <SelectTrigger>
+                <SelectValue placeholder="Изберете опция" />
+              </SelectTrigger>
+              <SelectContent>
+                {mealTimingOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
