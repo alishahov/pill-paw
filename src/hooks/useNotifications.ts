@@ -1,5 +1,5 @@
 
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { LocalNotifications, ScheduleEvery } from '@capacitor/local-notifications';
 import { useEffect } from 'react';
 import { Medication } from '@/types/medication';
 
@@ -42,7 +42,7 @@ export const useNotifications = () => {
           schedule: {
             at: scheduleTime,
             repeats: true,
-            every: 'day'
+            every: 'day' as ScheduleEvery
           },
           sound: 'default',
           attachments: [],
@@ -83,7 +83,14 @@ export const useNotifications = () => {
 
   const cancelAllNotifications = async () => {
     try {
-      await LocalNotifications.cancelAll();
+      const pending = await LocalNotifications.getPending();
+      const allIds = pending.notifications.map(notification => ({ id: notification.id }));
+      
+      if (allIds.length > 0) {
+        await LocalNotifications.cancel({
+          notifications: allIds
+        });
+      }
       console.log('Всички нотификации са отменени');
     } catch (error) {
       console.error('Грешка при отменяне на всички нотификации:', error);
