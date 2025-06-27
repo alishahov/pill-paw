@@ -15,13 +15,27 @@ export const useNotifications = () => {
         handleSnoozeNotification(notification);
       }
     });
+
+    // Почистване на слушателите при unmount
+    return () => {
+      LocalNotifications.removeAllListeners();
+    };
   }, []);
 
   const requestPermissions = async () => {
     try {
       const permission = await LocalNotifications.requestPermissions();
-      if (permission.display !== 'granted') {
+      console.log('Notification permission:', permission);
+      
+      if (permission.display === 'granted') {
+        console.log('Разрешението за нотификации е дадено');
+      } else {
         console.warn('Разрешението за нотификации не е дадено');
+        // Опитай отново да поискаш разрешение
+        const retry = await LocalNotifications.requestPermissions();
+        if (retry.display !== 'granted') {
+          console.error('Потребителят отказа разрешение за нотификации');
+        }
       }
     } catch (error) {
       console.error('Грешка при заявката за разрешение:', error);
@@ -72,20 +86,33 @@ export const useNotifications = () => {
 
   const scheduleNotification = async (medication: Medication) => {
     try {
+      // Първо провери дали разрешенията са дадени
+      const permission = await LocalNotifications.checkPermissions();
+      if (permission.display !== 'granted') {
+        console.log('Няма разрешение за нотификации, опитвам да поискам...');
+        await requestPermissions();
+      }
+
       // Изчистване на съществуващи нотификации за това лекарство
       await cancelMedicationNotifications(medication.id);
 
       const notifications = medication.times.map((time, index) => {
         const [hours, minutes] = time.split(':').map(Number);
+        
+        // Създаване на точния час за нотификацията
+        const now = new Date();
         const scheduleTime = new Date();
         scheduleTime.setHours(hours, minutes, 0, 0);
 
         // Ако времето е вече минало днес, насрочи за утре
-        if (scheduleTime <= new Date()) {
+        if (scheduleTime <= now) {
           scheduleTime.setDate(scheduleTime.getDate() + 1);
         }
 
-        let bodyText = `Време е да вземете ${medication.name} (${medication.dosage})`;
+        let bodyText = `Време е да вземете ${medication.name}`;
+        if (medication.dosage) {
+          bodyText += ` (${medication.dosage})`;
+        }
         if (medication.mealTiming) {
           const mealText = {
             before: 'преди хранене',
@@ -95,10 +122,13 @@ export const useNotifications = () => {
           bodyText += ` - ${mealText}`;
         }
 
+        // Уникален ID за всяка нотификация
+        const notificationId = parseInt(`${Math.abs(medication.id.slice(-6).split('').reduce((a, b) => a + b.charCodeAt(0), 0))}${index}`);
+
         return {
           title: 'Време за лекарство',
           body: bodyText,
-          id: parseInt(`${medication.id.slice(-6)}${index}`), // Уникален ID
+          id: notificationId,
           schedule: {
             at: scheduleTime,
             repeats: true,
@@ -109,7 +139,8 @@ export const useNotifications = () => {
           actionTypeId: 'medication-reminder',
           extra: {
             medicationId: medication.id,
-            medicationName: medication.name
+            medicationName: medication.name,
+            time: time
           }
         };
       });
@@ -118,7 +149,7 @@ export const useNotifications = () => {
         notifications
       });
 
-      console.log(`Насрочени ${notifications.length} нотификации за ${medication.name}`);
+      console.log(`Насрочени ${notifications.length} нотификации за ${medication.name}`, notifications);
     } catch (error) {
       console.error('Грешка при насрочване на нотификация:', error);
     }
@@ -135,6 +166,7 @@ export const useNotifications = () => {
         await LocalNotifications.cancel({
           notifications: medicationNotificationIds
         });
+        console.log(`Отменени ${medicationNotificationIds.length} нотификации за лекарство ${medicationId}`);
       }
     } catch (error) {
       console.error('Грешка при отменяне на нотификации:', error);

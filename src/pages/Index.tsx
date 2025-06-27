@@ -1,4 +1,3 @@
-
 import { useMedications } from '@/hooks/useMedications';
 import { MedicationCard } from '@/components/MedicationCard';
 import { NotificationSettings } from '@/components/NotificationSettings';
@@ -12,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Pill } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MedicationCalendar } from '@/components/MedicationCalendar';
+import { ProfileSection } from '@/components/ProfileSection';
 
 const Index = () => {
   const { medications, takes, addMedication, deleteMedication, takeMedication, getTodaysTakes } = useMedications();
@@ -63,33 +64,35 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 pb-20 overflow-y-auto">
+      <div className="flex-1 pb-24 pt-4 overflow-y-auto">
         {activeTab === 'home' && (
-          <>
+          <div className="space-y-6">
             {/* Stats Card */}
             {medications.length > 0 && (
-              <MobileStatsCard
-                completed={completed}
-                partial={partial}
-                missed={missed}
-                total={medications.length}
-              />
+              <div className="px-4">
+                <MobileStatsCard
+                  completed={completed}
+                  partial={partial}
+                  missed={missed}
+                  total={medications.length}
+                />
+              </div>
             )}
 
             {/* Medications List */}
             <div className="px-4">
               {medications.length === 0 ? (
-                <div className="text-center py-12">
-                  <Pill className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="text-center py-16">
+                  <Pill className="h-16 w-16 text-gray-300 mx-auto mb-6" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">
                     Няма добавени лекарства
                   </h3>
-                  <p className="text-gray-600 text-sm px-8">
+                  <p className="text-gray-600 text-sm px-8 leading-relaxed">
                     Започнете като добавите първото си лекарство чрез бутона "+" отдолу.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {medications.map((medication) => (
                     <MedicationCard
                       key={medication.id}
@@ -102,20 +105,18 @@ const Index = () => {
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
 
         {activeTab === 'calendar' && (
-          <div className="p-4 text-center">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Календар</h2>
-            <p className="text-gray-600">Календарният изглед ще бъде добавен скоро</p>
+          <div className="px-4 py-2">
+            <MedicationCalendar medications={medications} takes={takes} />
           </div>
         )}
 
         {activeTab === 'profile' && (
-          <div className="p-4 text-center">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Профил</h2>
-            <p className="text-gray-600">Профилните настройки ще бъдат добавени скоро</p>
+          <div className="px-4">
+            <ProfileSection />
           </div>
         )}
       </div>
