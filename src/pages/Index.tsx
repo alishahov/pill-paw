@@ -1,4 +1,3 @@
-
 import { useMedications } from '@/hooks/useMedications';
 import { MedicationCard } from '@/components/MedicationCard';
 import { NotificationSettings } from '@/components/NotificationSettings';
@@ -92,7 +91,7 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 pb-28 pt-6 overflow-y-auto">
+      <div className="flex-1 pb-36 pt-6 overflow-y-auto">
         {activeTab === 'home' && (
           <div className="space-y-8">
             {/* Stats Card */}
