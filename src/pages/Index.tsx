@@ -1,3 +1,4 @@
+
 import { useMedications } from '@/hooks/useMedications';
 import { MedicationCard } from '@/components/MedicationCard';
 import { NotificationSettings } from '@/components/NotificationSettings';
@@ -8,8 +9,10 @@ import { MobileDrawer } from '@/components/MobileDrawer';
 import { MobileAddMedicationSheet } from '@/components/MobileAddMedicationSheet';
 import { MobileStatsCard } from '@/components/MobileStatsCard';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Pill } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MedicationCalendar } from '@/components/MedicationCalendar';
 import { ProfileSection } from '@/components/ProfileSection';
@@ -17,12 +20,36 @@ import { ProfileSection } from '@/components/ProfileSection';
 const Index = () => {
   const { medications, takes, addMedication, deleteMedication, takeMedication, getTodaysTakes } = useMedications();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'calendar'>('home');
   const [showDrawer, setShowDrawer] = useState(false);
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Pill className="h-8 w-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   const handleAddMedication = (medicationData: Parameters<typeof addMedication>[0]) => {
     addMedication(medicationData);
@@ -61,12 +88,13 @@ const Index = () => {
         onSettingsClick={() => setShowSettings(true)}
         onReportClick={() => setShowReport(true)}
         onMenuClick={() => setShowDrawer(true)}
+        onProfileClick={() => setShowProfile(true)}
       />
 
       {/* Main Content */}
-      <div className="flex-1 pb-24 pt-4 overflow-y-auto">
+      <div className="flex-1 pb-28 pt-6 overflow-y-auto">
         {activeTab === 'home' && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Stats Card */}
             {medications.length > 0 && (
               <div className="px-4">
@@ -82,7 +110,7 @@ const Index = () => {
             {/* Medications List */}
             <div className="px-4">
               {medications.length === 0 ? (
-                <div className="text-center py-16">
+                <div className="text-center py-20">
                   <Pill className="h-16 w-16 text-gray-300 mx-auto mb-6" />
                   <h3 className="text-lg font-medium text-gray-900 mb-3">
                     Няма добавени лекарства
@@ -109,14 +137,8 @@ const Index = () => {
         )}
 
         {activeTab === 'calendar' && (
-          <div className="px-4 py-2">
+          <div className="px-4 py-4">
             <MedicationCalendar medications={medications} takes={takes} />
-          </div>
-        )}
-
-        {activeTab === 'profile' && (
-          <div className="px-4">
-            <ProfileSection />
           </div>
         )}
       </div>
@@ -142,6 +164,16 @@ const Index = () => {
         onClose={() => setShowAddSheet(false)}
         onAdd={handleAddMedication}
       />
+
+      {/* Profile Sheet */}
+      <Sheet open={showProfile} onOpenChange={setShowProfile}>
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle>Профил</SheetTitle>
+          </SheetHeader>
+          <ProfileSection />
+        </SheetContent>
+      </Sheet>
 
       {/* Settings Sheet */}
       <Sheet open={showSettings} onOpenChange={setShowSettings}>

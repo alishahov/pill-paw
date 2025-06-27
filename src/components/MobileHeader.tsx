@@ -1,14 +1,15 @@
 
 import { Button } from '@/components/ui/button';
-import { Pill, Settings, FileText, Menu } from 'lucide-react';
+import { Pill, Settings, FileText, Menu, User } from 'lucide-react';
 
 interface MobileHeaderProps {
   onSettingsClick: () => void;
   onReportClick: () => void;
   onMenuClick: () => void;
+  onProfileClick: () => void;
 }
 
-export const MobileHeader = ({ onSettingsClick, onReportClick, onMenuClick }: MobileHeaderProps) => {
+export const MobileHeader = ({ onSettingsClick, onReportClick, onMenuClick, onProfileClick }: MobileHeaderProps) => {
   const today = new Date().toLocaleDateString('bg-BG', {
     weekday: 'long',
     day: 'numeric',
@@ -28,6 +29,9 @@ export const MobileHeader = ({ onSettingsClick, onReportClick, onMenuClick }: Mo
         </div>
         
         <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={onProfileClick}>
+            <User className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={onReportClick}>
             <FileText className="h-4 w-4" />
           </Button>

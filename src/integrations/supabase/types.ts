@@ -9,7 +9,98 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      medication_takes: {
+        Row: {
+          id: string
+          medication_id: string
+          scheduled_time: string
+          taken_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          medication_id: string
+          scheduled_time: string
+          taken_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          medication_id?: string
+          scheduled_time?: string
+          taken_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_takes_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          color: string | null
+          created_at: string
+          dosage: string | null
+          id: string
+          name: string
+          notes: string | null
+          times: string[]
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          dosage?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          times?: string[]
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          dosage?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          times?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
