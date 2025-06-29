@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Medication, MedicationTake } from '@/types/medication';
 import { useNotifications } from './useNotifications';
@@ -45,6 +46,17 @@ export const useMedications = () => {
     await scheduleNotification(newMedication);
   };
 
+  const updateMedication = async (updatedMedication: Medication) => {
+    const updatedMedications = medications.map(med => 
+      med.id === updatedMedication.id ? updatedMedication : med
+    );
+    saveMedications(updatedMedications);
+    
+    // Отменяне на старите нотификации и насрочване на нови
+    await cancelMedicationNotifications(updatedMedication.id);
+    await scheduleNotification(updatedMedication);
+  };
+
   const deleteMedication = async (id: string) => {
     const updated = medications.filter(med => med.id !== id);
     saveMedications(updated);
@@ -83,6 +95,7 @@ export const useMedications = () => {
     medications,
     takes,
     addMedication,
+    updateMedication,
     deleteMedication,
     takeMedication,
     getTodaysTakes,

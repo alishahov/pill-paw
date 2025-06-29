@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Pill, Bell, Trash2 } from 'lucide-react';
+import { Pill, Bell, Trash2, Edit } from 'lucide-react';
 import { Medication } from '@/types/medication';
 
 interface MedicationCardProps {
@@ -10,6 +10,7 @@ interface MedicationCardProps {
   todaysTakes: number;
   onTake: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }
 
 const frequencyLabels = {
@@ -23,7 +24,8 @@ export const MedicationCard = ({
   medication, 
   todaysTakes, 
   onTake, 
-  onDelete 
+  onDelete,
+  onEdit
 }: MedicationCardProps) => {
   const isCompleted = todaysTakes >= medication.times.length;
   
@@ -35,14 +37,24 @@ export const MedicationCard = ({
             <Pill className="h-5 w-5 text-blue-600" />
             <CardTitle className="text-lg">{medication.name}</CardTitle>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       

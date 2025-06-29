@@ -9,6 +9,7 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { MobileAddMedicationSheet } from '@/components/MobileAddMedicationSheet';
 import { MobileStatsCard } from '@/components/MobileStatsCard';
+import { EditMedicationForm } from '@/components/EditMedicationForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useBackgroundNotifications } from '@/hooks/useBackgroundNotifications';
@@ -18,9 +19,10 @@ import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MedicationCalendar } from '@/components/MedicationCalendar';
 import { ProfileSection } from '@/components/ProfileSection';
+import { Medication } from '@/types/medication';
 
 const Index = () => {
-  const { medications, takes, addMedication, deleteMedication, takeMedication, getTodaysTakes } = useMedications();
+  const { medications, takes, addMedication, updateMedication, deleteMedication, takeMedication, getTodaysTakes } = useMedications();
   const { toast } = useToast();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -35,6 +37,8 @@ const Index = () => {
   const [showReport, setShowReport] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
+  const [showEditSheet, setShowEditSheet] = useState(false);
+  const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -79,6 +83,21 @@ const Index = () => {
       title: "Изтрито!",
       description: `${medicationName} беше премахнато от списъка.`,
       variant: "destructive",
+    });
+  };
+
+  const handleEditMedication = (medication: Medication) => {
+    setEditingMedication(medication);
+    setShowEditSheet(true);
+  };
+
+  const handleSaveEditedMedication = (updatedMedication: Medication) => {
+    updateMedication(updatedMedication);
+    setShowEditSheet(false);
+    setEditingMedication(null);
+    toast({
+      title: "Обновено!",
+      description: `${updatedMedication.name} беше успешно обновено.`,
     });
   };
 
@@ -134,6 +153,7 @@ const Index = () => {
                       todaysTakes={getTodaysTakes(medication.id).length}
                       onTake={() => handleTakeMedication(medication.id, medication.name)}
                       onDelete={() => handleDeleteMedication(medication.id, medication.name)}
+                      onEdit={() => handleEditMedication(medication)}
                     />
                   ))}
                 </div>
@@ -171,6 +191,25 @@ const Index = () => {
         onClose={() => setShowAddSheet(false)}
         onAdd={handleAddMedication}
       />
+
+      {/* Edit Medication Sheet */}
+      <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle>Редактирай лекарство</SheetTitle>
+          </SheetHeader>
+          {editingMedication && (
+            <EditMedicationForm
+              medication={editingMedication}
+              onSave={handleSaveEditedMedication}
+              onCancel={() => {
+                setShowEditSheet(false);
+                setEditingMedication(null);
+              }}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Profile Sheet */}
       <Sheet open={showProfile} onOpenChange={setShowProfile}>
