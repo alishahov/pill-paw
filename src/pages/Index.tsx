@@ -3,6 +3,7 @@ import { useMedications } from '@/hooks/useMedications';
 import { MedicationCard } from '@/components/MedicationCard';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { MedicationReport } from '@/components/MedicationReport';
+import { MedicationStatistics } from '@/components/MedicationStatistics';
 import { MobileHeader } from '@/components/MobileHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { MobileDrawer } from '@/components/MobileDrawer';
@@ -33,6 +34,7 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -96,7 +98,7 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 pb-36 pt-6 overflow-y-auto">
+      <div className="flex-1 pb-40 pt-6 overflow-y-auto">
         {activeTab === 'home' && (
           <div className="space-y-8">
             {/* Stats Card */}
@@ -160,6 +162,7 @@ const Index = () => {
         onClose={() => setShowDrawer(false)}
         onSettingsClick={() => setShowSettings(true)}
         onReportClick={() => setShowReport(true)}
+        onStatisticsClick={() => setShowStatistics(true)}
       />
 
       {/* Add Medication Sheet */}
@@ -176,6 +179,16 @@ const Index = () => {
             <SheetTitle>Профил</SheetTitle>
           </SheetHeader>
           <ProfileSection />
+        </SheetContent>
+      </Sheet>
+
+      {/* Statistics Sheet */}
+      <Sheet open={showStatistics} onOpenChange={setShowStatistics}>
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle>Статистика</SheetTitle>
+          </SheetHeader>
+          <MedicationStatistics medications={medications} takes={takes} />
         </SheetContent>
       </Sheet>
 

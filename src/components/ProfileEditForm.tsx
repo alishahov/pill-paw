@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Camera, Save, User } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useRef } from 'react';
+import { ImageCropper } from './ImageCropper';
 
 interface ProfileEditFormProps {
   onSave?: () => void;
@@ -26,6 +27,8 @@ export const ProfileEditForm = ({ onSave }: ProfileEditFormProps) => {
   });
 
   const [saving, setSaving] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -45,7 +48,28 @@ export const ProfileEditForm = ({ onSave }: ProfileEditFormProps) => {
       return;
     }
 
-    await uploadAvatar(file);
+    // Create image URL for cropper
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImage(imageUrl);
+    setShowCropper(true);
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    setShowCropper(false);
+    if (selectedImage) {
+      URL.revokeObjectURL(selectedImage);
+      setSelectedImage(null);
+    }
+    
+    await uploadAvatar(croppedFile);
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    if (selectedImage) {
+      URL.revokeObjectURL(selectedImage);
+      setSelectedImage(null);
+    }
   };
 
   const handleSave = async () => {
@@ -169,6 +193,16 @@ export const ProfileEditForm = ({ onSave }: ProfileEditFormProps) => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Image Cropper Modal */}
+      {selectedImage && (
+        <ImageCropper
+          imageSrc={selectedImage}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          isOpen={showCropper}
+        />
+      )}
     </div>
   );
 };
