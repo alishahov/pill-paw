@@ -9,11 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 
 export const NotificationSettings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const { requestPermissions, cancelAllNotifications } = useNotifications();
+  const { requestPermissions, cancelAllNotifications, scheduleTestNotification } = useNotifications();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Зареждане на настройката от localStorage
     const saved = localStorage.getItem('notifications-enabled');
     if (saved !== null) {
       setNotificationsEnabled(JSON.parse(saved));
@@ -25,11 +24,21 @@ export const NotificationSettings = () => {
     localStorage.setItem('notifications-enabled', JSON.stringify(enabled));
 
     if (enabled) {
-      await requestPermissions();
-      toast({
-        title: "Нотификациите са включени",
-        description: "Ще получавате напомняния за лекарствата си.",
-      });
+      const hasPermission = await requestPermissions();
+      if (hasPermission) {
+        toast({
+          title: "Нотификациите са включени",
+          description: "Ще получавате напомняния за лекарствата си.",
+        });
+      } else {
+        toast({
+          title: "Грешка",
+          description: "Не може да се включат нотификациите. Моля, разрешете ги от настройките на браузъра/устройството.",
+          variant: "destructive",
+        });
+        setNotificationsEnabled(false);
+        localStorage.setItem('notifications-enabled', JSON.stringify(false));
+      }
     } else {
       await cancelAllNotifications();
       toast({
@@ -42,20 +51,24 @@ export const NotificationSettings = () => {
 
   const handleTestNotification = async () => {
     try {
-      await requestPermissions();
+      const success = await scheduleTestNotification();
       
-      // Създаване на тестова нотификация за след 5 секунди
-      const testTime = new Date();
-      testTime.setSeconds(testTime.getSeconds() + 5);
-
-      toast({
-        title: "Тестова нотификация",
-        description: "Ще получите тестово напомняне след 5 секунди.",
-      });
+      if (success) {
+        toast({
+          title: "Тестова нотификация",
+          description: "Ще получите тестово напомняне след 3 секунди.",
+        });
+      } else {
+        toast({
+          title: "Грешка",
+          description: "Не може да се изпрати тестова нотификация. Моля, разрешете нотификациите.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Грешка",
-        description: "Не може да се изпрати тестова нотификация.",
+        description: "Възникна проблем при изпращането на тестовата нотификация.",
         variant: "destructive",
       });
     }

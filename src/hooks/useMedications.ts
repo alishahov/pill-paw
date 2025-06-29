@@ -9,7 +9,6 @@ export const useMedications = () => {
   const { scheduleNotification, cancelMedicationNotifications } = useNotifications();
 
   useEffect(() => {
-    // Зареждане на данни от localStorage
     const savedMedications = localStorage.getItem('medications');
     const savedTakes = localStorage.getItem('medication-takes');
     
@@ -42,8 +41,11 @@ export const useMedications = () => {
     const updatedMedications = [...medications, newMedication];
     saveMedications(updatedMedications);
     
-    // Насрочване на нотификации за новото лекарство
-    await scheduleNotification(newMedication);
+    // Насрочване на нотификации само ако са включени
+    const notificationsEnabled = JSON.parse(localStorage.getItem('notifications-enabled') || 'true');
+    if (notificationsEnabled) {
+      await scheduleNotification(newMedication);
+    }
   };
 
   const updateMedication = async (updatedMedication: Medication) => {
@@ -54,14 +56,17 @@ export const useMedications = () => {
     
     // Отменяне на старите нотификации и насрочване на нови
     await cancelMedicationNotifications(updatedMedication.id);
-    await scheduleNotification(updatedMedication);
+    
+    const notificationsEnabled = JSON.parse(localStorage.getItem('notifications-enabled') || 'true');
+    if (notificationsEnabled) {
+      await scheduleNotification(updatedMedication);
+    }
   };
 
   const deleteMedication = async (id: string) => {
     const updated = medications.filter(med => med.id !== id);
     saveMedications(updated);
     
-    // Отменяне на нотификациите за изтритото лекарство
     await cancelMedicationNotifications(id);
   };
 
@@ -81,15 +86,6 @@ export const useMedications = () => {
       new Date(take.takenAt).toDateString() === today
     );
   };
-
-  // Насрочване на нотификации за всички съществуващи лекарства при зареждане
-  useEffect(() => {
-    if (medications.length > 0) {
-      medications.forEach(medication => {
-        scheduleNotification(medication);
-      });
-    }
-  }, [medications.length]); // Само при промяна на броя лекарства
 
   return {
     medications,

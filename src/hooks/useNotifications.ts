@@ -5,17 +5,6 @@ import { Medication, NotificationSnooze } from '@/types/medication';
 
 export const useNotifications = () => {
   useEffect(() => {
-    // Заявка за разрешение за нотификации при първо зареждане
-    requestPermissions();
-    
-    // Слушане за нотификационни действия
-    LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
-      console.log('Notification action performed:', notification);
-      if (notification.actionId === 'snooze') {
-        handleSnoozeNotification(notification);
-      }
-    });
-
     // Почистване на слушателите при unmount
     return () => {
       LocalNotifications.removeAllListeners();
@@ -29,29 +18,62 @@ export const useNotifications = () => {
       
       if (permission.display === 'granted') {
         console.log('Разрешението за нотификации е дадено');
+        return true;
       } else {
         console.warn('Разрешението за нотификации не е дадено');
-        // Опитай отново да поискаш разрешение
-        const retry = await LocalNotifications.requestPermissions();
-        if (retry.display !== 'granted') {
-          console.error('Потребителят отказа разрешение за нотификации');
-        }
+        return false;
       }
     } catch (error) {
       console.error('Грешка при заявката за разрешение:', error);
+      return false;
+    }
+  };
+
+  const scheduleTestNotification = async () => {
+    try {
+      const hasPermission = await requestPermissions();
+      if (!hasPermission) {
+        throw new Error('Няма разрешение за нотификации');
+      }
+
+      const testTime = new Date();
+      testTime.setSeconds(testTime.getSeconds() + 3);
+
+      await LocalNotifications.schedule({
+        notifications: [{
+          title: 'Тестово напомняне',
+          body: 'Това е тестова нотификация от приложението за лекарства.',
+          id: 999999,
+          schedule: {
+            at: testTime,
+            repeats: false,
+          },
+          sound: 'default',
+          attachments: [],
+          actionTypeId: 'test-notification',
+          extra: {
+            type: 'test'
+          }
+        }]
+      });
+
+      console.log('Тестова нотификация е насрочена за', testTime);
+      return true;
+    } catch (error) {
+      console.error('Грешка при насрочване на тестова нотификация:', error);
+      return false;
     }
   };
 
   const handleSnoozeNotification = async (notification: any) => {
     try {
-      // Отложи за 10 минути
       const snoozeTime = new Date();
       snoozeTime.setMinutes(snoozeTime.getMinutes() + 10);
 
       const snoozeNotification = {
         title: 'Отложено напомняне',
         body: notification.notification.body,
-        id: notification.notification.id + 1000, // Уникален ID за snooze
+        id: notification.notification.id + 1000,
         schedule: {
           at: snoozeTime,
           repeats: false,
@@ -66,7 +88,6 @@ export const useNotifications = () => {
         notifications: [snoozeNotification]
       });
 
-      // Запази информацията за snooze в localStorage
       const snoozeData: NotificationSnooze = {
         medicationId: notification.notification.extra.medicationId,
         originalTime: new Date(),
@@ -86,25 +107,21 @@ export const useNotifications = () => {
 
   const scheduleNotification = async (medication: Medication) => {
     try {
-      // Първо провери дали разрешенията са дадени
-      const permission = await LocalNotifications.checkPermissions();
-      if (permission.display !== 'granted') {
-        console.log('Няма разрешение за нотификации, опитвам да поискам...');
-        await requestPermissions();
+      const hasPermission = await requestPermissions();
+      if (!hasPermission) {
+        console.log('Не може да се насрочат нотификации - няма разрешение');
+        return;
       }
 
-      // Изчистване на съществуващи нотификации за това лекарство
       await cancelMedicationNotifications(medication.id);
 
       const notifications = medication.times.map((time, index) => {
         const [hours, minutes] = time.split(':').map(Number);
         
-        // Създаване на точния час за нотификацията
         const now = new Date();
         const scheduleTime = new Date();
         scheduleTime.setHours(hours, minutes, 0, 0);
 
-        // Ако времето е вече минало днес, насрочи за утре
         if (scheduleTime <= now) {
           scheduleTime.setDate(scheduleTime.getDate() + 1);
         }
@@ -122,7 +139,6 @@ export const useNotifications = () => {
           bodyText += ` - ${mealText}`;
         }
 
-        // Уникален ID за всяка нотификация
         const notificationId = parseInt(`${Math.abs(medication.id.slice(-6).split('').reduce((a, b) => a + b.charCodeAt(0), 0))}${index}`);
 
         return {
@@ -193,6 +209,7 @@ export const useNotifications = () => {
     scheduleNotification,
     cancelMedicationNotifications,
     cancelAllNotifications,
-    requestPermissions
+    requestPermissions,
+    scheduleTestNotification
   };
 };

@@ -1,49 +1,56 @@
 
+import { Bell, Menu, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Pill, Settings, FileText, Menu, User } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface MobileHeaderProps {
-  onSettingsClick: () => void;
-  onReportClick: () => void;
   onMenuClick: () => void;
+  onNotificationsClick: () => void;
   onProfileClick: () => void;
 }
 
-export const MobileHeader = ({ onSettingsClick, onReportClick, onMenuClick, onProfileClick }: MobileHeaderProps) => {
-  const today = new Date().toLocaleDateString('bg-BG', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long'
-  });
-
+export const MobileHeader = ({ 
+  onMenuClick, 
+  onNotificationsClick, 
+  onProfileClick 
+}: MobileHeaderProps) => {
   return (
-    <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-      <div className="flex items-center justify-between p-4">
-        <Button variant="ghost" size="sm" onClick={onMenuClick}>
-          <Menu className="h-5 w-5" />
-        </Button>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuClick}
+            className="p-2"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Pill Paw
+          </h1>
+        </div>
         
         <div className="flex items-center gap-2">
-          <Pill className="h-6 w-6 text-blue-600" />
-          <h1 className="text-lg font-semibold text-gray-900">Моите лекарства</h1>
-        </div>
-        
-        <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={onProfileClick}>
-            <User className="h-4 w-4" />
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onNotificationsClick}
+            className="p-2"
+          >
+            <Bell className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onReportClick}>
-            <FileText className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onSettingsClick}>
-            <Settings className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onProfileClick}
+            className="p-2"
+          >
+            <User className="h-5 w-5" />
           </Button>
         </div>
       </div>
-      
-      <div className="px-4 pb-3">
-        <p className="text-sm text-gray-600 capitalize">{today}</p>
-      </div>
-    </div>
+    </header>
   );
 };
