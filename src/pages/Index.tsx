@@ -1,3 +1,4 @@
+
 import { useMedications } from '@/hooks/useMedications';
 import { MedicationCard } from '@/components/MedicationCard';
 import { NotificationSettings } from '@/components/NotificationSettings';
@@ -9,6 +10,7 @@ import { MobileAddMedicationSheet } from '@/components/MobileAddMedicationSheet'
 import { MobileStatsCard } from '@/components/MobileStatsCard';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useBackgroundNotifications } from '@/hooks/useBackgroundNotifications';
 import { Pill } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +23,9 @@ const Index = () => {
   const { toast } = useToast();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  
+  // Initialize background notifications
+  useBackgroundNotifications();
   
   const [activeTab, setActiveTab] = useState<'home' | 'calendar'>('home');
   const [showDrawer, setShowDrawer] = useState(false);
@@ -166,7 +171,7 @@ const Index = () => {
 
       {/* Profile Sheet */}
       <Sheet open={showProfile} onOpenChange={setShowProfile}>
-        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
           <SheetHeader className="mb-4">
             <SheetTitle>Профил</SheetTitle>
           </SheetHeader>
