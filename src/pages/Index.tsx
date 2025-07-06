@@ -107,12 +107,13 @@ const Index = () => {
   const missed = medications.filter(med => getTodaysTakes(med.id).length === 0).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Mobile Header */}
       <MobileHeader
         onSettingsClick={() => setShowSettings(true)}
         onReportClick={() => setShowReport(true)}
         onMenuClick={() => setShowDrawer(true)}
+        onNotificationsClick={() => setShowSettings(true)}
         onProfileClick={() => setShowProfile(true)}
       />
 
@@ -137,10 +138,10 @@ const Index = () => {
               {medications.length === 0 ? (
                 <div className="text-center py-20">
                   <Pill className="h-16 w-16 text-gray-300 mx-auto mb-6" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
                     Няма добавени лекарства
                   </h3>
-                  <p className="text-gray-600 text-sm px-8 leading-relaxed">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm px-8 leading-relaxed">
                     Започнете като добавите първото си лекарство чрез бутона "+" отдолу.
                   </p>
                 </div>
