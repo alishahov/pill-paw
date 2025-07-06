@@ -38,19 +38,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -58,7 +51,7 @@
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 217.2 32.6% 17.5%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
@@ -101,6 +94,60 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Fix notification panel visibility */
+  .toast-viewport {
+    @apply bg-background border border-border shadow-lg;
+  }
+
+  /* Ensure proper contrast for all text elements */
+  .text-gray-600 {
+    @apply text-muted-foreground;
+  }
+
+  .text-gray-700 {
+    @apply text-foreground;
+  }
+
+  .text-gray-800 {
+    @apply text-foreground;
+  }
+
+  .text-gray-900 {
+    @apply text-foreground;
+  }
+
+  /* Fix background colors for better contrast */
+  .bg-gray-50 {
+    @apply bg-background;
+  }
+
+  .bg-gray-100 {
+    @apply bg-muted;
+  }
+
+  .bg-gray-200 {
+    @apply bg-border;
+  }
+
+  .bg-white {
+    @apply bg-card;
+  }
+
+  /* Ensure notification toasts are visible */
+  [data-sonner-toaster] {
+    @apply !bg-card !text-card-foreground !border-border;
+  }
+
+  [data-sonner-toast] {
+    @apply !bg-card !text-card-foreground !border-border;
+  }
+
+  /* Fix sheet and dialog backgrounds */
+  .sheet-content,
+  .dialog-content {
+    @apply bg-card text-card-foreground border-border;
+  }
 }
 
 /* Safe area utilities for mobile devices */
@@ -111,5 +158,19 @@
   
   .pb-safe-bottom {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  /* Ensure proper visibility for notification elements */
+  .notification-panel {
+    @apply bg-card text-card-foreground border border-border shadow-lg;
+  }
+
+  /* Fix any remaining visibility issues */
+  .force-visible-text {
+    @apply text-foreground !important;
+  }
+
+  .force-visible-bg {
+    @apply bg-card !important;
   }
 }

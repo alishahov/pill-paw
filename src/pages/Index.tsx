@@ -133,7 +133,7 @@ const Index = () => {
   const missed = medications.filter(med => getTodaysTakes(med.id).length === 0).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-background dark:bg-background flex flex-col">
       {/* Mobile Header */}
       <MobileHeader
         onSettingsClick={() => setShowSettings(true)}
@@ -155,7 +155,7 @@ const Index = () => {
                   disabled={syncing}
                   variant="outline"
                   size="sm"
-                  className="w-full"
+                  className="w-full bg-card text-card-foreground border-border hover:bg-accent hover:text-accent-foreground"
                 >
                   {syncing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -183,11 +183,11 @@ const Index = () => {
             <div className="px-4">
               {medications.length === 0 ? (
                 <div className="text-center py-20">
-                  <Pill className="h-16 w-16 text-gray-300 mx-auto mb-6" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                  <Pill className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+                  <h3 className="text-lg font-medium text-foreground mb-3">
                     Няма добавени лекарства
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm px-8 leading-relaxed">
+                  <p className="text-muted-foreground text-sm px-8 leading-relaxed">
                     Започнете като добавите първото си лекарство чрез бутона "+" отдолу.
                   </p>
                 </div>
@@ -241,9 +241,9 @@ const Index = () => {
 
       {/* Edit Medication Sheet */}
       <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
           <SheetHeader className="mb-4">
-            <SheetTitle>Редактирай лекарство</SheetTitle>
+            <SheetTitle className="text-foreground">Редактирай лекарство</SheetTitle>
           </SheetHeader>
           {editingMedication && (
             <EditMedicationForm
@@ -260,9 +260,9 @@ const Index = () => {
 
       {/* Profile Sheet */}
       <Sheet open={showProfile} onOpenChange={setShowProfile}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
           <SheetHeader className="mb-4">
-            <SheetTitle>Профил</SheetTitle>
+            <SheetTitle className="text-foreground">Профил</SheetTitle>
           </SheetHeader>
           <ProfileSection />
         </SheetContent>
@@ -270,9 +270,9 @@ const Index = () => {
 
       {/* Enhanced Statistics Sheet */}
       <Sheet open={showStatistics} onOpenChange={setShowStatistics}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
           <SheetHeader className="mb-4">
-            <SheetTitle>Подробна статистика</SheetTitle>
+            <SheetTitle className="text-foreground">Подробна статистика</SheetTitle>
           </SheetHeader>
           <EnhancedMedicationReport 
             medications={medications} 
@@ -284,9 +284,9 @@ const Index = () => {
 
       {/* Settings Sheet */}
       <Sheet open={showSettings} onOpenChange={setShowSettings}>
-        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto bg-card text-card-foreground border-border">
           <SheetHeader className="mb-4">
-            <SheetTitle>Настройки</SheetTitle>
+            <SheetTitle className="text-foreground">Настройки</SheetTitle>
           </SheetHeader>
           <NotificationSettings />
         </SheetContent>
@@ -294,9 +294,9 @@ const Index = () => {
 
       {/* Enhanced Report Sheet */}
       <Sheet open={showReport} onOpenChange={setShowReport}>
-        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto bg-card text-card-foreground border-border">
           <SheetHeader className="mb-4">
-            <SheetTitle>Отчети и анализи</SheetTitle>
+            <SheetTitle className="text-foreground">Отчети и анализи</SheetTitle>
           </SheetHeader>
           <EnhancedMedicationReport 
             medications={medications} 

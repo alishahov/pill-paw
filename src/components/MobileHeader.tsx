@@ -19,14 +19,14 @@ export const MobileHeader = ({
   onReportClick 
 }: MobileHeaderProps) => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 pt-safe-top">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-card dark:bg-card border-b border-border px-4 py-3 pt-safe-top">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={onMenuClick}
-            className="p-2"
+            className="p-2 text-foreground hover:bg-accent hover:text-accent-foreground"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -36,7 +36,7 @@ export const MobileHeader = ({
               alt="Pill Paw" 
               className="h-8 w-8"
             />
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h1 className="text-lg font-semibold text-foreground">
               Pill Paw
             </h1>
           </div>
@@ -48,7 +48,7 @@ export const MobileHeader = ({
             variant="ghost"
             size="sm"
             onClick={onNotificationsClick}
-            className="p-2"
+            className="p-2 text-foreground hover:bg-accent hover:text-accent-foreground"
           >
             <Bell className="h-5 w-5" />
           </Button>
@@ -56,7 +56,7 @@ export const MobileHeader = ({
             variant="ghost"
             size="sm"
             onClick={onProfileClick}
-            className="p-2"
+            className="p-2 text-foreground hover:bg-accent hover:text-accent-foreground"
           >
             <User className="h-5 w-5" />
           </Button>
