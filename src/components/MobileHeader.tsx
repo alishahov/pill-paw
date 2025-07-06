@@ -7,12 +7,16 @@ interface MobileHeaderProps {
   onMenuClick: () => void;
   onNotificationsClick: () => void;
   onProfileClick: () => void;
+  onSettingsClick: () => void;
+  onReportClick: () => void;
 }
 
 export const MobileHeader = ({ 
   onMenuClick, 
   onNotificationsClick, 
-  onProfileClick 
+  onProfileClick,
+  onSettingsClick,
+  onReportClick 
 }: MobileHeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
