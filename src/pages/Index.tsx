@@ -12,7 +12,7 @@ import { EditMedicationForm } from '@/components/EditMedicationForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useBackgroundNotifications } from '@/hooks/useBackgroundNotifications';
-import { Pill, Loader2, Sync } from 'lucide-react';
+import { Pill, Loader2, RefreshCw } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -160,7 +160,7 @@ const Index = () => {
                   {syncing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Sync className="h-4 w-4 mr-2" />
+                    <RefreshCw className="h-4 w-4 mr-2" />
                   )}
                   {syncing ? 'Синхронизиране...' : 'Синхронизирай с облака'}
                 </Button>

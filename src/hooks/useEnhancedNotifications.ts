@@ -32,7 +32,9 @@ export const useEnhancedNotifications = () => {
   const checkPermissions = async () => {
     try {
       const permission = await LocalNotifications.checkPermissions();
-      setNotificationStatus(permission.display);
+      // Map permission states to our type, treating 'prompt' as 'unknown'
+      const mappedStatus = permission.display === 'prompt' ? 'unknown' : permission.display;
+      setNotificationStatus(mappedStatus as 'unknown' | 'granted' | 'denied');
     } catch (error) {
       console.error('Error checking permissions:', error);
       setNotificationStatus('unknown');
@@ -51,7 +53,9 @@ export const useEnhancedNotifications = () => {
 
     try {
       const permission = await LocalNotifications.requestPermissions();
-      setNotificationStatus(permission.display);
+      // Map permission states to our type, treating 'prompt' as 'unknown'
+      const mappedStatus = permission.display === 'prompt' ? 'unknown' : permission.display;
+      setNotificationStatus(mappedStatus as 'unknown' | 'granted' | 'denied');
       
       if (permission.display === 'granted') {
         toast({
@@ -107,7 +111,7 @@ export const useEnhancedNotifications = () => {
           schedule: {
             at: scheduleTime,
             repeats: true,
-            every: 'day'
+            every: 'day' as const
           },
           sound: 'default',
           attachments: [],
