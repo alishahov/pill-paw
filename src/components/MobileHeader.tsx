@@ -30,9 +30,16 @@ export const MobileHeader = ({
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Pill Paw
-          </h1>
+          <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/ca7d045c-9bfb-4d0c-9762-14cedfec618c.png" 
+              alt="Pill Paw" 
+              className="h-8 w-8"
+            />
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Pill Paw
+            </h1>
+          </div>
         </div>
         
         <div className="flex items-center gap-2">
