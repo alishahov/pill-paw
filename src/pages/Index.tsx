@@ -118,7 +118,7 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 pb-40 pt-6 overflow-y-auto">
+      <div className="flex-1 pb-40 pt-20 overflow-y-auto">
         {activeTab === 'home' && (
           <div className="space-y-8">
             {/* Stats Card */}
