@@ -1,9 +1,8 @@
 
-import { useMedications } from '@/hooks/useMedications';
+import { useEnhancedMedications } from '@/hooks/useEnhancedMedications';
 import { MedicationCard } from '@/components/MedicationCard';
 import { NotificationSettings } from '@/components/NotificationSettings';
-import { MedicationReport } from '@/components/MedicationReport';
-import { MedicationStatistics } from '@/components/MedicationStatistics';
+import { EnhancedMedicationReport } from '@/components/EnhancedMedicationReport';
 import { MobileHeader } from '@/components/MobileHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { MobileDrawer } from '@/components/MobileDrawer';
@@ -13,18 +12,31 @@ import { EditMedicationForm } from '@/components/EditMedicationForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useBackgroundNotifications } from '@/hooks/useBackgroundNotifications';
-import { Pill } from 'lucide-react';
+import { Pill, Loader2, Sync } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MedicationCalendar } from '@/components/MedicationCalendar';
 import { ProfileSection } from '@/components/ProfileSection';
 import { Medication } from '@/types/medication';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  const { medications, takes, addMedication, updateMedication, deleteMedication, takeMedication, getTodaysTakes } = useMedications();
+  const { 
+    medications, 
+    takes, 
+    addMedication, 
+    updateMedication, 
+    deleteMedication, 
+    takeMedication, 
+    getTodaysTakes,
+    restoreFromBackup,
+    syncToCloud,
+    loading
+  } = useEnhancedMedications();
+  
   const { toast } = useToast();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   // Initialize background notifications
@@ -39,19 +51,23 @@ const Index = () => {
   const [showStatistics, setShowStatistics] = useState(false);
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   // Redirect to auth if not logged in
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  // Show loading while checking auth
-  if (loading) {
+  // Show loading while checking auth or loading data
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Pill className="h-8 w-8 text-blue-600 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Зареждане...</p>
+        </div>
       </div>
     );
   }
@@ -61,8 +77,8 @@ const Index = () => {
     return null;
   }
 
-  const handleAddMedication = (medicationData: Parameters<typeof addMedication>[0]) => {
-    addMedication(medicationData);
+  const handleAddMedication = async (medicationData: Parameters<typeof addMedication>[0]) => {
+    const newMedication = await addMedication(medicationData);
     toast({
       title: "Успешно добавено!",
       description: `${medicationData.name} беше добавено в списъка.`,
@@ -101,6 +117,16 @@ const Index = () => {
     });
   };
 
+  const handleSync = async () => {
+    setSyncing(true);
+    await syncToCloud();
+    setSyncing(false);
+  };
+
+  const handleRestore = (backupMedications: Medication[], backupTakes: any[]) => {
+    restoreFromBackup(backupMedications, backupTakes);
+  };
+
   // Calculate stats
   const completed = medications.filter(med => getTodaysTakes(med.id).length >= med.times.length).length;
   const partial = medications.filter(med => getTodaysTakes(med.id).length > 0 && getTodaysTakes(med.id).length < med.times.length).length;
@@ -120,7 +146,27 @@ const Index = () => {
       {/* Main Content */}
       <div className="flex-1 pb-40 pt-20 overflow-y-auto">
         {activeTab === 'home' && (
-          <div className="space-y-8">
+          <div className="space-y-6">
+            {/* Sync Button */}
+            {user && (
+              <div className="px-4">
+                <Button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  {syncing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sync className="h-4 w-4 mr-2" />
+                  )}
+                  {syncing ? 'Синхронизиране...' : 'Синхронизирай с облака'}
+                </Button>
+              </div>
+            )}
+
             {/* Stats Card */}
             {medications.length > 0 && (
               <div className="px-4">
@@ -222,13 +268,17 @@ const Index = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Statistics Sheet */}
+      {/* Enhanced Statistics Sheet */}
       <Sheet open={showStatistics} onOpenChange={setShowStatistics}>
         <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle>Статистика</SheetTitle>
+            <SheetTitle>Подробна статистика</SheetTitle>
           </SheetHeader>
-          <MedicationStatistics medications={medications} takes={takes} />
+          <EnhancedMedicationReport 
+            medications={medications} 
+            takes={takes}
+            onRestore={handleRestore}
+          />
         </SheetContent>
       </Sheet>
 
@@ -242,13 +292,17 @@ const Index = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Report Sheet */}
+      {/* Enhanced Report Sheet */}
       <Sheet open={showReport} onOpenChange={setShowReport}>
         <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle>Медицински отчет</SheetTitle>
+            <SheetTitle>Отчети и анализи</SheetTitle>
           </SheetHeader>
-          <MedicationReport medications={medications} takes={takes} />
+          <EnhancedMedicationReport 
+            medications={medications} 
+            takes={takes}
+            onRestore={handleRestore}
+          />
         </SheetContent>
       </Sheet>
     </div>
