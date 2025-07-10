@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { LocalNotifications, ScheduleEvery } from '@capacitor/local-notifications';
 import { Medication } from '@/types/medication';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,7 +17,7 @@ export const useEnhancedNotifications = () => {
   const checkNotificationSupport = async () => {
     try {
       // Check if we're in a supported environment
-      if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (typeof window !== 'undefined' && ('Notification' in window || 'serviceWorker' in navigator)) {
         setIsSupported(true);
       } else {
         setIsSupported(false);
@@ -33,8 +33,9 @@ export const useEnhancedNotifications = () => {
     try {
       const permission = await LocalNotifications.checkPermissions();
       // Map permission states to our type, treating 'prompt' as 'unknown'
-      const mappedStatus = permission.display === 'prompt' ? 'unknown' : permission.display;
-      setNotificationStatus(mappedStatus as 'unknown' | 'granted' | 'denied');
+      const mappedStatus = permission.display === 'prompt' ? 'unknown' : 
+                          permission.display === 'granted' ? 'granted' : 'denied';
+      setNotificationStatus(mappedStatus);
     } catch (error) {
       console.error('Error checking permissions:', error);
       setNotificationStatus('unknown');
@@ -54,8 +55,9 @@ export const useEnhancedNotifications = () => {
     try {
       const permission = await LocalNotifications.requestPermissions();
       // Map permission states to our type, treating 'prompt' as 'unknown'
-      const mappedStatus = permission.display === 'prompt' ? 'unknown' : permission.display;
-      setNotificationStatus(mappedStatus as 'unknown' | 'granted' | 'denied');
+      const mappedStatus = permission.display === 'prompt' ? 'unknown' : 
+                          permission.display === 'granted' ? 'granted' : 'denied';
+      setNotificationStatus(mappedStatus);
       
       if (permission.display === 'granted') {
         toast({
@@ -111,7 +113,7 @@ export const useEnhancedNotifications = () => {
           schedule: {
             at: scheduleTime,
             repeats: true,
-            every: 'day' as const
+            every: 'day' as ScheduleEvery
           },
           sound: 'default',
           attachments: [],
@@ -120,7 +122,7 @@ export const useEnhancedNotifications = () => {
             medicationId: medication.id,
             medicationName: medication.name,
             time: time,
-            dosage: medication.dosage
+            dosage: medication.dosage || ''
           }
         };
       });

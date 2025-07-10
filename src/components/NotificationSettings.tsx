@@ -2,21 +2,35 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Bell, BellOff } from 'lucide-react';
+import { Bell, BellOff, TestTube, AlertCircle, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useEnhancedNotifications } from '@/hooks/useEnhancedNotifications';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 export const NotificationSettings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const { requestPermissions, cancelAllNotifications, scheduleTestNotification } = useNotifications();
+  const { 
+    notificationStatus, 
+    isSupported, 
+    requestPermissions, 
+    cancelAllNotifications, 
+    scheduleTestNotification,
+    getPendingNotifications
+  } = useEnhancedNotifications();
   const { toast } = useToast();
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem('notifications-enabled');
     if (saved !== null) {
       setNotificationsEnabled(JSON.parse(saved));
     }
+    
+    // Get pending notifications count
+    getPendingNotifications().then(result => {
+      setPendingCount(result.notifications.length);
+    });
   }, []);
 
   const handleToggleNotifications = async (enabled: boolean) => {
@@ -25,95 +39,111 @@ export const NotificationSettings = () => {
 
     if (enabled) {
       const hasPermission = await requestPermissions();
-      if (hasPermission) {
-        toast({
-          title: "Нотификациите са включени",
-          description: "Ще получавате напомняния за лекарствата си.",
-        });
-      } else {
-        toast({
-          title: "Грешка",
-          description: "Не може да се включат нотификациите. Моля, разрешете ги от настройките на браузъра/устройството.",
-          variant: "destructive",
-        });
+      if (!hasPermission) {
         setNotificationsEnabled(false);
         localStorage.setItem('notifications-enabled', JSON.stringify(false));
       }
     } else {
       await cancelAllNotifications();
       toast({
-        title: "Нотификациите са изключени",
-        description: "Няма да получавате напомняния.",
+        title: "Уведомления изключени",
+        description: "Всички насрочени уведомления са отменени.",
         variant: "destructive",
       });
     }
   };
 
   const handleTestNotification = async () => {
-    try {
-      const success = await scheduleTestNotification();
-      
-      if (success) {
-        toast({
-          title: "Тестова нотификация",
-          description: "Ще получите тестово напомняне след 3 секунди.",
-        });
-      } else {
-        toast({
-          title: "Грешка",
-          description: "Не може да се изпрати тестова нотификация. Моля, разрешете нотификациите.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+    const success = await scheduleTestNotification();
+    if (!success) {
       toast({
-        title: "Грешка",
-        description: "Възникна проблем при изпращането на тестовата нотификация.",
+        title: "Грешка при тест",
+        description: "Моля, проверете разрешенията за уведомления.",
         variant: "destructive",
       });
     }
   };
 
+  const getStatusBadge = () => {
+    if (!isSupported) {
+      return <Badge variant="destructive">Не се поддържа</Badge>;
+    }
+    
+    switch (notificationStatus) {
+      case 'granted':
+        return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Разрешени</Badge>;
+      case 'denied':
+        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Отказани</Badge>;
+      default:
+        return <Badge variant="secondary">Неизвестно</Badge>;
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="h-5 w-5" />
-          Настройки за напомняния
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Пуш нотификации</p>
-            <p className="text-xs text-gray-600">
-              Получавайте напомняния в зададените времена
-            </p>
-          </div>
-          <Switch
-            checked={notificationsEnabled}
-            onCheckedChange={handleToggleNotifications}
-          />
-        </div>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Настройки за уведомления
+            </div>
+            {getStatusBadge()}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {!isSupported && (
+            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+              <AlertCircle className="h-4 w-4" />
+              Уведомленията не се поддържат на това устройство/браузър
+            </div>
+          )}
 
-        {notificationsEnabled && (
-          <Button
-            variant="outline"
-            onClick={handleTestNotification}
-            className="w-full"
-          >
-            <Bell className="h-4 w-4 mr-2" />
-            Тествай нотификация
-          </Button>
-        )}
-
-        {!notificationsEnabled && (
-          <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-            <BellOff className="h-4 w-4" />
-            Нотификациите са изключени
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Push уведомления</p>
+              <p className="text-xs text-muted-foreground">
+                Получавайте напомняния в зададените времена
+              </p>
+            </div>
+            <Switch
+              checked={notificationsEnabled && isSupported}
+              onCheckedChange={handleToggleNotifications}
+              disabled={!isSupported}
+            />
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {pendingCount > 0 && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+              <Bell className="h-4 w-4" />
+              {pendingCount} насрочени уведомления
+            </div>
+          )}
+
+          {notificationsEnabled && isSupported && notificationStatus === 'granted' && (
+            <Button
+              variant="outline"
+              onClick={handleTestNotification}
+              className="w-full"
+            >
+              <TestTube className="h-4 w-4 mr-2" />
+              Тествай уведомление
+            </Button>
+          )}
+
+          {notificationStatus === 'denied' && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+                <BellOff className="h-4 w-4" />
+                Уведомленията са блокирани
+              </div>
+              <p className="text-xs text-muted-foreground">
+                За да включите уведомленията, моля отидете в настройките на браузъра и разрешете уведомления за този сайт.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };

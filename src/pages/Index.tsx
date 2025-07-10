@@ -12,7 +12,7 @@ import { EditMedicationForm } from '@/components/EditMedicationForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useBackgroundNotifications } from '@/hooks/useBackgroundNotifications';
-import { Pill, Loader2, RefreshCw } from 'lucide-react';
+import { Pill, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -20,6 +20,7 @@ import { MedicationCalendar } from '@/components/MedicationCalendar';
 import { ProfileSection } from '@/components/ProfileSection';
 import { Medication } from '@/types/medication';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
   const { 
@@ -32,7 +33,8 @@ const Index = () => {
     getTodaysTakes,
     restoreFromBackup,
     syncToCloud,
-    loading
+    loading,
+    error
   } = useEnhancedMedications();
   
   const { toast } = useToast();
@@ -63,10 +65,10 @@ const Index = () => {
   // Show loading while checking auth or loading data
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Зареждане...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto" />
+          <p className="text-muted-foreground">Зареждане...</p>
         </div>
       </div>
     );
@@ -78,28 +80,55 @@ const Index = () => {
   }
 
   const handleAddMedication = async (medicationData: Parameters<typeof addMedication>[0]) => {
-    const newMedication = await addMedication(medicationData);
-    toast({
-      title: "Успешно добавено!",
-      description: `${medicationData.name} беше добавено в списъка.`,
-    });
+    try {
+      await addMedication(medicationData);
+      toast({
+        title: "Успешно добавено!",
+        description: `${medicationData.name} беше добавено в списъка.`,
+      });
+    } catch (error) {
+      console.error('Error adding medication:', error);
+      toast({
+        title: "Грешка",
+        description: "Неуспешно добавяне на лекарството.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleTakeMedication = (medicationId: string, medicationName: string) => {
-    takeMedication(medicationId);
-    toast({
-      title: "Отбелязано!",
-      description: `Приемът на ${medicationName} беше отбелязан.`,
-    });
+    try {
+      takeMedication(medicationId);
+      toast({
+        title: "Отбелязано!",
+        description: `Приемът на ${medicationName} беше отбелязан.`,
+      });
+    } catch (error) {
+      console.error('Error taking medication:', error);
+      toast({
+        title: "Грешка",
+        description: "Неуспешно отбелязване на приема.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteMedication = (medicationId: string, medicationName: string) => {
-    deleteMedication(medicationId);
-    toast({
-      title: "Изтрито!",
-      description: `${medicationName} беше премахнато от списъка.`,
-      variant: "destructive",
-    });
+    try {
+      deleteMedication(medicationId);
+      toast({
+        title: "Изтрито!",
+        description: `${medicationName} беше премахнато от списъка.`,
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Error deleting medication:', error);
+      toast({
+        title: "Грешка",
+        description: "Неуспешно изтриване на лекарството.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditMedication = (medication: Medication) => {
@@ -107,24 +136,60 @@ const Index = () => {
     setShowEditSheet(true);
   };
 
-  const handleSaveEditedMedication = (updatedMedication: Medication) => {
-    updateMedication(updatedMedication);
-    setShowEditSheet(false);
-    setEditingMedication(null);
-    toast({
-      title: "Обновено!",
-      description: `${updatedMedication.name} беше успешно обновено.`,
-    });
+  const handleSaveEditedMedication = async (updatedMedication: Medication) => {
+    try {
+      await updateMedication(updatedMedication);
+      setShowEditSheet(false);
+      setEditingMedication(null);
+      toast({
+        title: "Обновено!",
+        description: `${updatedMedication.name} беше успешно обновено.`,
+      });
+    } catch (error) {
+      console.error('Error updating medication:', error);
+      toast({
+        title: "Грешка",
+        description: "Неуспешно обновяване на лекарството.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSync = async () => {
     setSyncing(true);
-    await syncToCloud();
-    setSyncing(false);
+    try {
+      await syncToCloud();
+      toast({
+        title: "Синхронизирано!",
+        description: "Данните са успешно синхронизирани с облака.",
+      });
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        title: "Грешка при синхронизиране",
+        description: "Моля, опитайте отново.",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const handleRestore = (backupMedications: Medication[], backupTakes: any[]) => {
-    restoreFromBackup(backupMedications, backupTakes);
+    try {
+      restoreFromBackup(backupMedications, backupTakes);
+      toast({
+        title: "Възстановено!",
+        description: "Данните са успешно възстановени от резервното копие.",
+      });
+    } catch (error) {
+      console.error('Restore error:', error);
+      toast({
+        title: "Грешка при възстановяване",
+        description: "Неуспешно възстановяване на данните.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Calculate stats
@@ -133,7 +198,7 @@ const Index = () => {
   const missed = medications.filter(med => getTodaysTakes(med.id).length === 0).length;
 
   return (
-    <div className="min-h-screen bg-background dark:bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Mobile Header */}
       <MobileHeader
         onSettingsClick={() => setShowSettings(true)}
@@ -145,6 +210,16 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="flex-1 pb-40 pt-20 overflow-y-auto">
+        {/* Error Display */}
+        {error && (
+          <div className="px-4 pb-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         {activeTab === 'home' && (
           <div className="space-y-6">
             {/* Sync Button */}
@@ -155,7 +230,7 @@ const Index = () => {
                   disabled={syncing}
                   variant="outline"
                   size="sm"
-                  className="w-full bg-card text-card-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                  className="w-full"
                 >
                   {syncing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -241,9 +316,9 @@ const Index = () => {
 
       {/* Edit Medication Sheet */}
       <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-foreground">Редактирай лекарство</SheetTitle>
+            <SheetTitle>Редактирай лекарство</SheetTitle>
           </SheetHeader>
           {editingMedication && (
             <EditMedicationForm
@@ -260,9 +335,9 @@ const Index = () => {
 
       {/* Profile Sheet */}
       <Sheet open={showProfile} onOpenChange={setShowProfile}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-foreground">Профил</SheetTitle>
+            <SheetTitle>Профил</SheetTitle>
           </SheetHeader>
           <ProfileSection />
         </SheetContent>
@@ -270,9 +345,9 @@ const Index = () => {
 
       {/* Enhanced Statistics Sheet */}
       <Sheet open={showStatistics} onOpenChange={setShowStatistics}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-foreground">Подробна статистика</SheetTitle>
+            <SheetTitle>Подробна статистика</SheetTitle>
           </SheetHeader>
           <EnhancedMedicationReport 
             medications={medications} 
@@ -284,9 +359,9 @@ const Index = () => {
 
       {/* Settings Sheet */}
       <Sheet open={showSettings} onOpenChange={setShowSettings}>
-        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto bg-card text-card-foreground border-border">
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-foreground">Настройки</SheetTitle>
+            <SheetTitle>Настройки</SheetTitle>
           </SheetHeader>
           <NotificationSettings />
         </SheetContent>
@@ -294,9 +369,9 @@ const Index = () => {
 
       {/* Enhanced Report Sheet */}
       <Sheet open={showReport} onOpenChange={setShowReport}>
-        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto bg-card text-card-foreground border-border">
+        <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-foreground">Отчети и анализи</SheetTitle>
+            <SheetTitle>Отчети и анализи</SheetTitle>
           </SheetHeader>
           <EnhancedMedicationReport 
             medications={medications} 
