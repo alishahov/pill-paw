@@ -1,99 +1,96 @@
-
-import { useState, useEffect } from 'react';
-import { Medication, MedicationTake } from '@/types/medication';
-import { useNotifications } from './useNotifications';
+import { useState } from 'react';
+import { Medication } from '@/types/medication';
+import { useEnhancedNotifications } from './useEnhancedNotifications';
+import { useMedicationSync } from './useMedicationSync';
 
 export const useMedications = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
-  const [takes, setTakes] = useState<MedicationTake[]>([]);
-  const { scheduleNotification, cancelMedicationNotifications } = useNotifications();
+  const [error, setError] = useState<string | null>(null);
+  
+  const { scheduleAdvancedNotification, cancelMedicationNotifications } = useEnhancedNotifications();
+  const { autoSync } = useMedicationSync();
 
-  useEffect(() => {
-    const savedMedications = localStorage.getItem('medications');
-    const savedTakes = localStorage.getItem('medication-takes');
-    
-    if (savedMedications) {
-      setMedications(JSON.parse(savedMedications));
+  const saveMedications = async (newMedications: Medication[]) => {
+    try {
+      setMedications(newMedications);
+      localStorage.setItem('medications', JSON.stringify(newMedications));
+      
+      // Auto-sync to cloud
+      await autoSync(newMedications);
+      setError(null);
+    } catch (error) {
+      console.error('Error saving medications:', error);
+      setError('Грешка при запазване на данните.');
     }
-    
-    if (savedTakes) {
-      setTakes(JSON.parse(savedTakes));
-    }
-  }, []);
-
-  const saveMedications = (newMedications: Medication[]) => {
-    setMedications(newMedications);
-    localStorage.setItem('medications', JSON.stringify(newMedications));
-  };
-
-  const saveTakes = (newTakes: MedicationTake[]) => {
-    setTakes(newTakes);
-    localStorage.setItem('medication-takes', JSON.stringify(newTakes));
   };
 
   const addMedication = async (medication: Omit<Medication, 'id' | 'createdAt'>) => {
-    const newMedication: Medication = {
-      ...medication,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-    };
-    
-    const updatedMedications = [...medications, newMedication];
-    saveMedications(updatedMedications);
-    
-    // Насрочване на нотификации само ако са включени
-    const notificationsEnabled = JSON.parse(localStorage.getItem('notifications-enabled') || 'true');
-    if (notificationsEnabled) {
-      await scheduleNotification(newMedication);
+    try {
+      const newMedication: Medication = {
+        ...medication,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+      };
+      
+      const updatedMedications = [...medications, newMedication];
+      await saveMedications(updatedMedications);
+      
+      // Schedule notifications
+      const notificationsEnabled = JSON.parse(localStorage.getItem('notifications-enabled') || 'true');
+      if (notificationsEnabled) {
+        await scheduleAdvancedNotification(newMedication);
+      }
+
+      return newMedication;
+    } catch (error) {
+      console.error('Error adding medication:', error);
+      setError('Грешка при добавяне на лекарството.');
+      throw error;
     }
   };
 
   const updateMedication = async (updatedMedication: Medication) => {
-    const updatedMedications = medications.map(med => 
-      med.id === updatedMedication.id ? updatedMedication : med
-    );
-    saveMedications(updatedMedications);
-    
-    // Отменяне на старите нотификации и насрочване на нови
-    await cancelMedicationNotifications(updatedMedication.id);
-    
-    const notificationsEnabled = JSON.parse(localStorage.getItem('notifications-enabled') || 'true');
-    if (notificationsEnabled) {
-      await scheduleNotification(updatedMedication);
+    try {
+      const updatedMedications = medications.map(med => 
+        med.id === updatedMedication.id ? updatedMedication : med
+      );
+      await saveMedications(updatedMedications);
+      
+      // Update notifications
+      await cancelMedicationNotifications(updatedMedication.id);
+      const notificationsEnabled = JSON.parse(localStorage.getItem('notifications-enabled') || 'true');
+      if (notificationsEnabled) {
+        await scheduleAdvancedNotification(updatedMedication);
+      }
+      setError(null);
+    } catch (error) {
+      console.error('Error updating medication:', error);
+      setError('Грешка при обновяване на лекарството.');
+      throw error;
     }
   };
 
   const deleteMedication = async (id: string) => {
-    const updated = medications.filter(med => med.id !== id);
-    saveMedications(updated);
-    
-    await cancelMedicationNotifications(id);
-  };
-
-  const takeMedication = (medicationId: string, notes?: string) => {
-    const newTake: MedicationTake = {
-      medicationId,
-      takenAt: new Date(),
-      notes,
-    };
-    saveTakes([...takes, newTake]);
-  };
-
-  const getTodaysTakes = (medicationId: string) => {
-    const today = new Date().toDateString();
-    return takes.filter(take => 
-      take.medicationId === medicationId && 
-      new Date(take.takenAt).toDateString() === today
-    );
+    try {
+      const updated = medications.filter(med => med.id !== id);
+      await saveMedications(updated);
+      await cancelMedicationNotifications(id);
+      setError(null);
+    } catch (error) {
+      console.error('Error deleting medication:', error);
+      setError('Грешка при изтриване на лекарството.');
+      throw error;
+    }
   };
 
   return {
     medications,
-    takes,
+    setMedications,
+    error,
+    setError,
     addMedication,
     updateMedication,
     deleteMedication,
-    takeMedication,
-    getTodaysTakes,
+    saveMedications,
   };
 };
